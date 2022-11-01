@@ -21,21 +21,61 @@ int getCrossProduct(int a_x, int a_y, int b_x, int b_y, int c_x, int c_y)
         return 0;
 }
 
-double distance(pair<int,int> p1, pair<int,int> p2){
-    double dis = sqrt((double(p2.second-p1.second)*double(p2.second-p1.second)) + (double(p2.first-p1.first)*double(p2.first-p1.first)));
+double distance(pair<int, int> p1, pair<int, int> p2)
+{
+    double dis = sqrt((double(p2.second - p1.second) * double(p2.second - p1.second)) + (double(p2.first - p1.first) * double(p2.first - p1.first)));
     return dis;
 }
 
-vector<int> grahamsScan(vector<pair<int,int>> points){
-    stack<pair<int,int>> s;
-    vector<pair<int,int>> convex_hull;
-    s.push(points[0]); convex_hull.push_back(points[0]);
-    s.push(points[1]); convex_hull.push_back(points[1]);
+vector<pair<int, int>> grahamScan(vector<pair<int, int>> points)
+{
+    stack<pair<int, int>> s;
+    vector<pair<int, int>> convex_hull;
+    s.push(points[0]);
+    convex_hull.push_back(points[0]);
+    s.push(points[1]);
+    convex_hull.push_back(points[1]);
     s.push(points[2]);
 
-    for(int i=3;i<points.size();i++){
-        
+    for (int i = 3; i < points.size(); i++)
+    {
+        pair<int, int> thirdPoint = points[i];
+        pair<int, int> secondPoint = s.top();
+        s.pop();
+        pair<int, int> firstPoint = s.top();
+        s.push(secondPoint);
+
+        int res = getCrossProduct(firstPoint.first, firstPoint.second, secondPoint.first, secondPoint.second, thirdPoint.first, thirdPoint.second);
+        if (res == 1)
+        {
+            s.pop();
+            i = i - 1;
+        }
+        else if (res == 0)
+        {
+            if(distance(secondPoint, firstPoint) > distance(thirdPoint, firstPoint)){
+                continue;
+            }
+            else{
+                s.pop();
+                s.push(thirdPoint);
+            }
+        }
+        else
+        {
+            s.push(thirdPoint);
+        }
     }
+
+    vector<pair<int, int>> ans;
+    while (!s.empty())
+    {
+        ans.push_back(s.top());
+        s.pop();
+    }
+    reverse(ans.begin(), ans.end());
+
+    return ans;
 }
 
 pair<int, int> getStartingPoint(int *x, int *y, int n)
@@ -129,10 +169,16 @@ int main()
     for (int i = 0; i < points.size(); i++)
         cout << points[i].first << " " << points[i].second << "\n";
 
-    if(points.size() < 3){
-        cout<<"It is not possible to have a convex hull with the given number of points\n";
+    if (points.size() < 3)
+    {
+        cout << "It is not possible to have a convex hull with the given number of points\n";
         exit(0);
     }
 
-    grahamsScan(points);
+    vector<pair<int,int>> convexHull = grahamScan(points);
+
+    cout<<"The convex hull is created by the following points:\n";
+    for(auto it : convexHull){
+        cout<<"{"<<it.first<<", "<<it.second<<"}\n";
+    }
 }
