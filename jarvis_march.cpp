@@ -27,8 +27,27 @@ double distance(pair<int, int> p1, pair<int, int> p2)
     return dis;
 }
 
-vector<pair<int, int>> jarvisMarch(vector<pair<int, int>> points)
+bool compare(const pair<int, int> &a, const pair<int, int> &b)
 {
+    double angle1 = atan((double(a.second - bottom_most_point.second) / double(a.first - bottom_most_point.first)));
+    double angle2 = atan((double(b.second - bottom_most_point.second) / double(b.first - bottom_most_point.first)));
+    return (angle1 < angle2);
+}
+
+vector<pair<int, int>> jarvisMarch(vector<pair<int, int>> points, pair<int,int> starting_point, int n)
+{
+    pair<int,int> current_point = starting_point;
+    pair<int,int> next_point = {starting_point.first+1, starting_point.second};
+    
+    while(next_point!=starting_point){
+        pair<int,int> min_angle_point = {INT_MAX, INT_MAX};
+        double min_angle = DBL_MAX;
+        for(int i=0;i<n;i++){
+            if(points[i]!=next_point && points[i]!=current_point){
+                compare()
+            }
+        }
+    }
     return points;
 }
 
