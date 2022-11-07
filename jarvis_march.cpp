@@ -8,68 +8,92 @@ using namespace std;
 
 pair<int, int> bottom_most_point = {0, 0};
 
-// Function to know the orientation (clockwise or anticlockwise) of given 3 points
-// returns 0 if collinear, return 1 if clockwise, return -1 if anticlockwise
-int getCrossProduct(int a_x, int a_y, int b_x, int b_y, int c_x, int c_y)
+// To find orientation of ordered triplet (p, q, r).
+// The function returns following values
+// 0 --> p, q and r are collinear
+// 1 --> Clockwise
+// 2 --> Counterclockwise
+int orientation(pair<int,int> p, pair<int,int> q, pair<int,int> r)
 {
-    int val = ((b_y - a_y) * (c_x - b_x)) - ((b_x - a_x) * (c_y - a_y));
-    if (val > 0)
-        return 1;
-    else if (val < 0)
-        return -1;
-    else
-        return 0;
+    int val = (q.second - p.second) * (r.first - q.first) - (q.first - p.first) * (r.second - q.second);
+ 
+    if (val == 0) return 0;  // collinear
+    return (val > 0)? 1: 2; // clock or counterclock wise
 }
 
-double distance(pair<int, int> p1, pair<int, int> p2)
-{
-    double dis = sqrt((double(p2.second - p1.second) * double(p2.second - p1.second)) + (double(p2.first - p1.first) * double(p2.first - p1.first)));
-    return dis;
-}
-
-bool compare(const pair<int, int> &a, const pair<int, int> &b)
-{
-    double angle1 = atan((double(a.second - bottom_most_point.second) / double(a.first - bottom_most_point.first)));
-    double angle2 = atan((double(b.second - bottom_most_point.second) / double(b.first - bottom_most_point.first)));
-    return (angle1 < angle2);
-}
-
-vector<pair<int, int>> jarvisMarch(vector<pair<int, int>> points, pair<int,int> starting_point, int n)
-{
-    pair<int,int> current_point = starting_point;
-    pair<int,int> next_point = {starting_point.first+1, starting_point.second};
-    
-    while(next_point!=starting_point){
-        pair<int,int> min_angle_point = {INT_MAX, INT_MAX};
-        double min_angle = DBL_MAX;
-        for(int i=0;i<n;i++){
-            if(points[i]!=next_point && points[i]!=current_point){
-                compare()
-            }
-        }
-    }
-    return points;
-}
-
-pair<int, int> getStartingPoint(int *x, int *y, int n)
+int getStartingPoint(vector<pair<int,int>> points)
 {
     pair<int, int> point = {-1, -1};
     int min_y = INT_MAX, min_x = INT_MAX;
-    for (int i = 0; i < n; i++)
+    int index = -1;
+    for (int i = 0; i < points.size(); i++)
     {
-        if (y[i] < min_y)
+        if (points[i].second < min_y)
         {
-            min_y = y[i];
-            min_x = x[i];
+            min_y = points[i].second;
+            min_x = points[i].first;
+            index = i;
         }
-        else if (y[i] == min_y)
+        else if (points[i].second == min_y)
         {
-            min_x = min(min_x, x[i]);
+            if(min_x > points[i].first)
+                index = i;
+            min_x = min(min_x, points[i].first);
         }
     }
     point = {min_x, min_y};
-    return point;
+    return index;
 }
+ 
+// Prints convex hull of a set of n points.
+vector<pair<int,int>> jarvisMarch(vector<pair<int,int>> points, int n)
+{
+    // There must be at least 3 points
+    if (n < 3){
+        cout<<"Jarvis March is not possible\n";
+        exit(0);
+    } 
+ 
+    // Initialize Result
+    vector<pair<int,int>> hull;
+ 
+    // Find the leftmost point
+    int starting_point = getStartingPoint(points);
+ 
+    // Start from leftmost point, keep moving counterclockwise
+    // until reach the start point again.  This loop runs O(h)
+    // times where h is number of points in result or output.
+    int p = starting_point, q;
+    do
+    {
+        // Add current point to result
+        hull.push_back(points[p]);
+ 
+        // Search for a point 'q' such that orientation(p, q,
+        // x) is counterclockwise for all points 'x'. The idea
+        // is to keep track of last visited most counterclock-
+        // wise point in q. If any point 'i' is more counterclock-
+        // wise than q, then update q.
+        q = (p+1)%n;
+        for (int i = 0; i < n; i++)
+        {
+           // If i is more counterclockwise than current q, then
+           // update q
+           if (orientation(points[p], points[i], points[q]) == 2)
+               q = i;
+        }
+ 
+        // Now q is the most counterclockwise with respect to p
+        // Set p as q for next iteration, so that q is added to
+        // result 'hull'
+        p = q;
+ 
+    } while (p != starting_point);  // While we don't come to first point
+ 
+    return hull;
+}
+
+
 
 // Main function
 int main()
@@ -93,10 +117,6 @@ int main()
     // print the points in the plane
     P.printPoints(P.x, P.y, P.n);
 
-    pair<int, int> start_point = getStartingPoint(P.x, P.y, P.n);
-
-    bottom_most_point = start_point;
-
     vector<pair<int, int>> points;
 
     for (int i = 0; i < P.n; i++)
@@ -104,9 +124,9 @@ int main()
         points.push_back({P.x[i], P.y[i]});
     }
 
-    cout << "The bottom most point is = {" << start_point.first << ", " << start_point.second << "}\n";
+    // cout << "The bottom most point is = {" << start_point.first << ", " << start_point.second << "}\n";
 
-    vector<pair<int, int>> convexHull = jarvisMarch(points);
+    vector<pair<int, int>> convexHull = jarvisMarch(points, P.n);
 
     cout << "The convex hull is created by the following points:\n";
     for (auto it : convexHull)
