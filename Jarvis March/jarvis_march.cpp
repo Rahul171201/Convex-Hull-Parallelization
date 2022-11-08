@@ -3,8 +3,8 @@
 
 using namespace std;
 
-#define N 10       // number of points in the plane
-#define MAX_VAL 20 // maximum value of any point in the plane
+#define N 30       // number of points in the plane
+#define MAX_VAL 50 // maximum value of any point in the plane
 
 pair<int, int> bottom_most_point = {0, 0};
 
@@ -98,7 +98,7 @@ vector<pair<int, int>> jarvisMarch(vector<pair<int, int>> points, int n)
 // Main function
 int main()
 {
-    // srand(time(0));
+    srand(time(0));
     Plane P;
     P.n = N;
     P.x = (int *)malloc(P.n * sizeof(int));
@@ -151,4 +151,6 @@ int main()
     }
 
     MyFile.close();
+
+    system("C:/Users/RAHUL/AppData/Local/Programs/Python/Python310/python.exe plot.py 1");
 }

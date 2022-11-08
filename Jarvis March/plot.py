@@ -23,7 +23,7 @@ for i in range(1, 2*n, 2):
     x.append(numbers[i])
     y.append(numbers[i+1])
 
-plt.scatter(x, y)
+plt.scatter(x, y, color='red')
 
 # Reading into convex hull points
 n_convex_hull = numbers[2*n+1]
