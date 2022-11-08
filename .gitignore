@@ -1,3 +1,5 @@
 /.vscode
-
+/.vs
 /a.exe
+/*/.vscode
+/*/a.exe
