@@ -2,9 +2,10 @@
 #include<mpi.h>
 
 using namespace std;
+using namespace std::chrono;
 
-#define N 64       // number of points in the plane
-#define MAX_VAL 30 // maximum value of any point in the plane
+#define N 1024       // number of points in the plane
+#define MAX_VAL 100 // maximum value of any point in the plane
 
 pair<int, int> bottom_most_point = {0, 0};
 
@@ -98,6 +99,9 @@ int main(int argc, char *argv[])
                 cout << "Jarvis March is not possible\n";
                 exit(0);
             }
+            
+             // Get starting timepoint
+    auto start = high_resolution_clock::now();
 
             int hull_x[N];
             int hull_y[N];
@@ -184,11 +188,24 @@ int main(int argc, char *argv[])
             	MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
             }
             
+            // Get ending timepoint
+    auto stop = high_resolution_clock::now();
+    
+    		// Get duration. Substart timepoints to
+    // get duration. To cast it to proper unit
+    // use duration cast method
+    auto duration = duration_cast<microseconds>(stop - start);
+ 
+    cout << "Time taken by OpenMPI Jarvis March Algorithm:  = "
+         << duration.count() << " microseconds" << endl;
+            
             int convex_hull[2*count];
             for(int i=0;i<count;i=i+1){
             	convex_hull[2*i] = hull_x[i];
             	convex_hull[2*i+1] = hull_y[i];
             }
+            
+            
             
             cout<<"The points in the convex hull are\n";
             for(int i=0;i<2*count;i=i+2){
