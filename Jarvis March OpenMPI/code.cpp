@@ -1,19 +1,18 @@
 #include <bits/stdc++.h>
-#include<mpi.h>
+#include <mpi.h>
 
 using namespace std;
 using namespace std::chrono;
 
-#define N 1024       // number of points in the plane
+#define N 1024      // number of points in the plane
 #define MAX_VAL 100 // maximum value of any point in the plane
-
-pair<int, int> bottom_most_point = {0, 0};
 
 // To find orientation of ordered triplet (p, q, r).
 // The function returns following values
 // 0 --> p, q and r are collinear
 // 1 --> Clockwise
 // 2 --> Counterclockwise
+
 int orientation(int p_x, int p_y, int q_x, int q_y, int r_x, int r_y)
 {
     int val = (q_y - p_y) * (r_x - q_x) - (q_x - p_x) * (r_y - q_y);
@@ -52,10 +51,6 @@ int main(int argc, char *argv[])
     // np -> no. of processes
     // pid -> process id
 
-    
-
-    
-
     MPI_Status status;
 
     // Creation of parallel processes
@@ -69,28 +64,28 @@ int main(int argc, char *argv[])
     // master process
     if (pid == 0)
     {
-    
-    	srand(time(0));
 
-    int x[N], y[N];
+        srand(time(0));
 
-    for (int i = 0; i < N; i++)
-    {
-        int val_x = (rand() % (MAX_VAL - 1 + 1)) + 1;
-        int val_y = (rand() % (MAX_VAL - 1 + 1)) + 1;
-        x[i] = val_x;
-        y[i] = val_y;
-    }
-    
-    	// total number of points
-    cout << "The total number of points in the plane = " << N << "\n";
-    
-    cout<<"The points are\n";
-    	for (int i = 0; i < N; i++)
-    {
-       cout<<x[i]<<" "<<y[i]<<"\n";
-    }
-    
+        int x[N], y[N];
+
+        for (int i = 0; i < N; i++)
+        {
+            int val_x = (rand() % (MAX_VAL - 1 + 1)) + 1;
+            int val_y = (rand() % (MAX_VAL - 1 + 1)) + 1;
+            x[i] = val_x;
+            y[i] = val_y;
+        }
+
+        // total number of points
+        cout << "The total number of points in the plane = " << N << "\n";
+
+        cout << "The points are\n";
+        for (int i = 0; i < N; i++)
+        {
+            cout << x[i] << " " << y[i] << "\n";
+        }
+
         if (np > 1)
         {
             // There must be at least 3 points
@@ -99,13 +94,12 @@ int main(int argc, char *argv[])
                 cout << "Jarvis March is not possible\n";
                 exit(0);
             }
-            
-             // Get starting timepoint
-    auto start = high_resolution_clock::now();
+
+            // Get starting timepoint
+            auto start = high_resolution_clock::now();
 
             int hull_x[N];
             int hull_y[N];
-            int temp_point[N];
 
             // Find the leftmost point
             int starting_point = getStartingPoint(x, y, N);
@@ -115,17 +109,16 @@ int main(int argc, char *argv[])
             // times where h is number of points in result or output.
             int p = starting_point, q;
             int count = 0;
-            
+
             int again = 1;
-            
-            
-            
+
             do
             {
-            	for(int i=1;i<np;i++){
-            		MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
-            	}	
-            
+                for (int i = 1; i < np; i++)
+                {
+                    MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
+                }
+
                 // Add current point to result
                 hull_x[count] = x[p];
                 hull_y[count] = y[p];
@@ -141,12 +134,7 @@ int main(int argc, char *argv[])
                 int elements_per_process = (N / np);
                 q = (p + 1) % N;
 
-                for (int i = 0; i < N; i++)
-                {
-                    temp_point[i] = i;
-                }
-                
-                //cout << "Message sending started for loop number =  " << count << " with value of p = "<<p<<"\n";
+                // cout << "Message sending started for loop number =  " << count << " with value of p = "<<p<<"\n";
 
                 for (int i = 1; i < np; i++)
                 {
@@ -165,7 +153,7 @@ int main(int argc, char *argv[])
                         q = i;
                 }
 
-		//cout << "Message receving started by master\n";
+                // cout << "Message receving started by master\n";
 
                 for (int i = 1; i < np; i++)
                 {
@@ -182,87 +170,88 @@ int main(int argc, char *argv[])
                 p = q;
 
             } while (p != starting_point); // While we don't come to first point
-            
+
             again = 0;
-            for(int i=1;i<np;i++){
-            	MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
+            for (int i = 1; i < np; i++)
+            {
+                MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
             }
-            
+
             // Get ending timepoint
-    auto stop = high_resolution_clock::now();
-    
-    		// Get duration. Substart timepoints to
-    // get duration. To cast it to proper unit
-    // use duration cast method
-    auto duration = duration_cast<microseconds>(stop - start);
- 
-    cout << "Time taken by OpenMPI Jarvis March Algorithm:  = "
-         << duration.count() << " microseconds" << endl;
-            
-            int convex_hull[2*count];
-            for(int i=0;i<count;i=i+1){
-            	convex_hull[2*i] = hull_x[i];
-            	convex_hull[2*i+1] = hull_y[i];
+            auto stop = high_resolution_clock::now();
+
+            // Get duration. Substart timepoints to
+            // get duration. To cast it to proper unit
+            // use duration cast method
+            auto duration = duration_cast<microseconds>(stop - start);
+
+            cout << "Time taken by OpenMPI Jarvis March Algorithm:  = "
+                 << duration.count() << " microseconds" << endl;
+
+            int convex_hull[2 * count];
+            for (int i = 0; i < count; i = i + 1)
+            {
+                convex_hull[2 * i] = hull_x[i];
+                convex_hull[2 * i + 1] = hull_y[i];
             }
-            
-            
-            
-            cout<<"The points in the convex hull are\n";
-            for(int i=0;i<2*count;i=i+2){
-            	cout<<convex_hull[i]<<" "<<convex_hull[i+1]<<"\n";
+
+            cout << "The points in the convex hull are\n";
+            for (int i = 0; i < 2 * count; i = i + 2)
+            {
+                cout << convex_hull[i] << " " << convex_hull[i + 1] << "\n";
             }
 
             freopen("points.txt", "w", stdout);
-            cout<<N<<"\n";
-            for(int i=0;i<N;i++){
-            	cout<<x[i]<<" "<<y[i]<<"\n";
+            cout << N << "\n";
+            for (int i = 0; i < N; i++)
+            {
+                cout << x[i] << " " << y[i] << "\n";
             }
-            
-            cout<<count<<"\n";
-            for(int i=0;i<2*count;i=i+2){
-            	cout<<convex_hull[i]<<" "<<convex_hull[i+1]<<"\n";
+
+            cout << count << "\n";
+            for (int i = 0; i < 2 * count; i = i + 2)
+            {
+                cout << convex_hull[i] << " " << convex_hull[i + 1] << "\n";
             }
         }
     }
     // slave processes
     else
     {
-    
-    	int again = 1;
-    	MPI_Recv(&again, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-    	while(again){
-    		//cout << "Message receving started by "<<pid<<"\n";
-        // stores the received array segment
-        // in local array a2
-        MPI_Recv(&n_elements_recieved, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-        
-        int arr_x[n_elements_recieved];
-        int arr_y[n_elements_recieved];
-        int p_x, p_y;
 
-        
-        MPI_Recv(&arr_x, n_elements_recieved, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-        MPI_Recv(&arr_y, n_elements_recieved, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-        MPI_Recv(&p_x, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-        MPI_Recv(&p_y, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-
-        // calculates its partial sum
-        int q = 0;
-
-        for (int i = 0; i < n_elements_recieved; i++)
-            if (orientation(p_x, p_y, arr_x[i], arr_y[i], arr_x[q], arr_y[q]) == 2)
-                q = i;
-
-        int final_index = pid * n_elements_recieved + q;
-        // sends the partial sum to the root process
-        
-        //cout << "Message sending started by "<<pid<<" with the value = "<<final_index<<"\n";
-        MPI_Send(&final_index, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD);
-        
+        int again = 1;
         MPI_Recv(&again, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
-    	}
-    
-    
+        while (again)
+        {
+            // cout << "Message receving started by "<<pid<<"\n";
+            // stores the received array segment
+            // in local array a2
+            MPI_Recv(&n_elements_recieved, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+
+            int arr_x[n_elements_recieved];
+            int arr_y[n_elements_recieved];
+            int p_x, p_y;
+
+            MPI_Recv(&arr_x, n_elements_recieved, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(&arr_y, n_elements_recieved, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(&p_x, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+            MPI_Recv(&p_y, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+
+            // calculates its partial sum
+            int q = 0;
+
+            for (int i = 0; i < n_elements_recieved; i++)
+                if (orientation(p_x, p_y, arr_x[i], arr_y[i], arr_x[q], arr_y[q]) == 2)
+                    q = i;
+
+            int final_index = pid * n_elements_recieved + q;
+            // sends the partial sum to the root process
+
+            // cout << "Message sending started by "<<pid<<" with the value = "<<final_index<<"\n";
+            MPI_Send(&final_index, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD);
+
+            MPI_Recv(&again, 1, MPI_INT, 0, pid - 1, MPI_COMM_WORLD, &status);
+        }
     }
 
     // cleans up all MPI state before exit of process
