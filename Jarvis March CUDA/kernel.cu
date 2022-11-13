@@ -1,5 +1,4 @@
-﻿
-#include <iostream>
+﻿#include <iostream>
 #include <stdlib.h>
 #include <time.h>
 #include <chrono>
@@ -14,21 +13,21 @@ using namespace std::chrono;
 int bottom_most_point_x = 0;
 int bottom_most_point_y = 0;
 
-// To find orientation of ordered triplet (p, q, r).
+// Device function To find orientation of points p,q and r
 // The function returns following values
 // 0 --> p, q and r are collinear
 // 1 --> Clockwise
 // 2 --> Counterclockwise
-// device function
 __device__ int orientation(int p_x, int p_y, int q_x, int q_y, int r_x, int r_y)
 {
     int val = (q_y - p_y) * (r_x - q_x) - (q_x - p_x) * (r_y - q_y);
 
     if (val == 0)
-        return 0;             // collinear
-    return (val > 0) ? 1 : 2; // clock or counterclock wise
+        return 0;            
+    return (val > 0) ? 1 : 2; 
 }
 
+// Function to get the bottom most point
 int getStartingPoint(int *x, int *y, int n)
 {
     int min_y = INT_MAX, min_x = INT_MAX;
@@ -51,12 +50,12 @@ int getStartingPoint(int *x, int *y, int n)
     return index;
 }
 
+// Kernel function to find the minimum counter clockwise angle
 __global__ void min_angle(int *x, int *y, int p, int n, int *temp_point)
 {
-    int i = threadIdx.x;
-    int stride = 1;
-    int temp_rem = 2;
-    //printf("Im thread number %d\n", i);
+    int i = threadIdx.x; // get thread id
+    int stride = 1; // stride
+    int temp_rem = 2; 
 
     if (i >= n)
         return;
@@ -64,19 +63,16 @@ __global__ void min_angle(int *x, int *y, int p, int n, int *temp_point)
     __syncthreads();
 
     while (stride < n) {
-        
         if (i % temp_rem == 0) {
-            
             if (orientation(x[p], y[p], x[temp_point[i+stride]], y[temp_point[i+stride]], x[temp_point[i]], y[temp_point[i]]) == 2) {
                 temp_point[i] = temp_point[i+stride];
             }
-            //printf("thread  number = %d has temp_point = %d\n", i, temp_point[i]);
         }
         
         temp_rem = temp_rem *2;
         stride = stride * 2;
         
-        __syncthreads();
+        __syncthreads(); // synchronization barrier
     }
 }
 
@@ -88,7 +84,8 @@ int main()
     int* x;
     int* y;
 
-    cudaMallocManaged(&x, N * sizeof(int));
+    // unified shared memory
+    cudaMallocManaged(&x, N * sizeof(int)); 
     cudaMallocManaged(&y, N * sizeof(int));
 
     for (int i = 0; i < N; i++)
@@ -101,14 +98,14 @@ int main()
 
     // Convex Hull Computation
 
-    // There must be at least 3 points
+    // There must be at least 3 points for a convex hull tto be possible
     if (N < 3)
     {
         cout << "Convex hull is not possible, since we require more than 3 points\n";
         exit(0);
     }
 
-    // Initialize Result
+    // Initialize the hull
     int* hull_x = (int*)malloc(N * sizeof(int));
     int* hull_y = (int*)malloc(N * sizeof(int));
 
@@ -116,18 +113,14 @@ int main()
 
     cudaMallocManaged(&temp_point, N * sizeof(int));
 
-    // Find the leftmost point
+    // Find the bottommost starting point
     int starting_point = getStartingPoint(x, y, N);
 
-    // Start from leftmost point, keep moving counterclockwise
-    // until reach the start point again.  This loop runs O(h)
-    // times where h is number of points in result or output.
     int p = starting_point;
     int count = 0;
     do
     {
-        //cout << "value of p = " << p << "\n";
-        // Add current point to result
+        // Add current point to convex hull
         hull_x[count] = x[p];
         hull_y[count] = y[p];
         count++;
@@ -136,25 +129,12 @@ int main()
             temp_point[i] = i;
         }
 
-        // Search for a point 'q' such that orientation(p, q,
-        // x) is counterclockwise for all points 'x'. The idea
-        // is to keep track of last visited most counterclock-
-        // wise point in q. If any point 'i' is more counterclock-
-        // wise than q, then update q.
-
         min_angle << <1, N >> > (x, y, p, N, temp_point);
         cudaDeviceSynchronize();
 
-        
-
-        // Now q is the most counterclockwise with respect to p
-        // Set p as q for next iteration, so that q is added to
-        // result 'hull'
         p = temp_point[0];
-        //cout << "value of p = " << p << "\n";
-    } while (p != starting_point); // While we don't come to first point
-
-    cudaFree(temp_point);
+        
+    } while (p != starting_point); // Repeat the process until and unless we reach ths starting point
 
 
     int* convex_hull = (int*)malloc(2 * N * sizeof(int));
@@ -175,6 +155,7 @@ int main()
         cout << convex_hull[i] << " " << convex_hull[i+1] << "\n";
     }
 
+    // write the output onto a file
     freopen("points.txt", "w", stdout);
 
     cout << N << "\n";
@@ -191,4 +172,10 @@ int main()
         cout << convex_hull[i] << " " << convex_hull[i+1] << "\n";
     }
     
+     // free memory
+     free(hull_x);
+     free(hull_y);
+     cudaFree(temp_point);
+     cudaFree(temp_point);
+     cudaFree(temp_point); 
 }

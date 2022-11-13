@@ -7,21 +7,20 @@ using namespace std::chrono;
 #define N 1024      // number of points in the plane
 #define MAX_VAL 100 // maximum value of any point in the plane
 
-// To find orientation of ordered triplet (p, q, r).
-// The function returns following values
+// Function to find orientation of points p,q and r
 // 0 --> p, q and r are collinear
 // 1 --> Clockwise
 // 2 --> Counterclockwise
-
 int orientation(int p_x, int p_y, int q_x, int q_y, int r_x, int r_y)
 {
     int val = (q_y - p_y) * (r_x - q_x) - (q_x - p_x) * (r_y - q_y);
 
     if (val == 0)
-        return 0;             // collinear
-    return (val > 0) ? 1 : 2; // clock or counterclock wise
+        return 0;             
+    return (val > 0) ? 1 : 2;
 }
 
+// Function to get the bottom most point
 int getStartingPoint(int x[N], int y[N], int n)
 {
     int min_y = INT_MAX, min_x = INT_MAX;
@@ -44,6 +43,7 @@ int getStartingPoint(int x[N], int y[N], int n)
     return index;
 }
 
+// Main function
 int main(int argc, char *argv[])
 {
 
@@ -55,16 +55,12 @@ int main(int argc, char *argv[])
 
     // Creation of parallel processes
     MPI_Init(&argc, &argv);
-
-    // find out process ID,
-    // and how many processes were started
     MPI_Comm_rank(MPI_COMM_WORLD, &pid);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    // master process
+    // Master process
     if (pid == 0)
     {
-
         srand(time(0));
 
         int x[N], y[N];
@@ -86,12 +82,13 @@ int main(int argc, char *argv[])
             cout << x[i] << " " << y[i] << "\n";
         }
 
+        // Check if number of processes is more than 1
         if (np > 1)
         {
-            // There must be at least 3 points
+            // There must be at least 3 points for a convex hull to be possible
             if (N < 3)
             {
-                cout << "Jarvis March is not possible\n";
+                cout << "Convex hull is not possible, since we require more than 3 points\n";
                 exit(0);
             }
 
@@ -101,15 +98,13 @@ int main(int argc, char *argv[])
             int hull_x[N];
             int hull_y[N];
 
-            // Find the leftmost point
+            // Find the bottommost point
             int starting_point = getStartingPoint(x, y, N);
 
-            // Start from leftmost point, keep moving counterclockwise
-            // until reach the start point again.  This loop runs O(h)
-            // times where h is number of points in result or output.
             int p = starting_point, q;
             int count = 0;
 
+            // variable to check if message to be passed again
             int again = 1;
 
             do
@@ -119,23 +114,16 @@ int main(int argc, char *argv[])
                     MPI_Send(&again, 1, MPI_INT, i, i - 1, MPI_COMM_WORLD);
                 }
 
-                // Add current point to result
+                // Add current point to the convex hull
                 hull_x[count] = x[p];
                 hull_y[count] = y[p];
 
                 count++;
 
-                // Search for a point 'q' such that orientation(p, q,
-                // x) is counterclockwise for all points 'x'. The idea
-                // is to keep track of last visited most counterclock-
-                // wise point in q. If any point 'i' is more counterclock-
-                // wise than q, then update q.
-
                 int elements_per_process = (N / np);
                 q = (p + 1) % N;
 
-                // cout << "Message sending started for loop number =  " << count << " with value of p = "<<p<<"\n";
-
+               // Message sent by master to all 
                 for (int i = 1; i < np; i++)
                 {
                     int index = i * elements_per_process;
