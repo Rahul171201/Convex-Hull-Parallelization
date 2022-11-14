@@ -4,8 +4,8 @@
 using namespace std;
 using namespace std::chrono;
 
-#define N 1024      // number of points in the plane
-#define MAX_VAL 100 // maximum value of any point in the plane
+#define N 100000      // number of points in the plane
+#define MAX_VAL 10000 // maximum value of any point in the plane
 
 // Function to find orientation of points p,q and r
 // 0 --> p, q and r are collinear
@@ -71,7 +71,7 @@ void sequentialJarvisMarch(int *x, int *y, int n)
         for (int i = 0; i < n; i++)
         {
             // If i is more counterclockwise than current q, then update q
-            if (sequential_orientation(x[p], y[p], x[i], y[i], x[q], y[q]) == 2)
+            if (orientation(x[p], y[p], x[i], y[i], x[q], y[q]) == 2)
                 q = i;
         }
 
@@ -133,15 +133,17 @@ int main(int argc, char *argv[])
         }
 
         // total number of points
-        cout << "The total number of points in the plane = " << N << "\n";
+        //cout << "The total number of points in the plane = " << N << "\n";
 
-        cout << "The points are\n";
-        for (int i = 0; i < N; i++)
-        {
-            cout << x[i] << " " << y[i] << "\n";
-        }
-
-        start = high_resolution_clock::now();
+        //cout << "The points are\n";
+        //for (int i = 0; i < N; i++)
+        //{
+        //    cout << x[i] << " " << y[i] << "\n";
+        //}
+        
+        // Find the bottommost point
+        int starting_point = getStartingPoint(x, y, N);
+        
         // Check if number of processes is more than 1
         if (np > 1)
         {
@@ -153,13 +155,10 @@ int main(int argc, char *argv[])
             }
 
             // Get starting timepoint
-            auto start = high_resolution_clock::now();
+            start = high_resolution_clock::now();
 
             int hull_x[N];
-            int hull_y[N];
-
-            // Find the bottommost point
-            int starting_point = getStartingPoint(x, y, N);
+            int hull_y[N];      
 
             int p = starting_point, q;
             int count = 0;
@@ -226,7 +225,7 @@ int main(int argc, char *argv[])
             }
 
             // Get ending timepoint
-            start = high_resolution_clock::now();
+            stop = high_resolution_clock::now();
 
             // Get duration. Substart timepoints to
             // get duration. To cast it to proper unit
@@ -306,3 +305,41 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+// RESULTS
+// AFTER AVERAGING THE RESULTS OVER 5 ITERATIONS :
+
+// FOR N = 10 AND MAX_VALUE = 10, TIME_BY_SERIAL_EXECUTION = 1 milliseconds, TIME_BY_PARALLEL_EXECUTION = 2131 milliseconds, RATIO(SERIAL/PARALLEL) = 0.000469 
+// FOR N = 10 AND MAX_VALUE = 100, TIME_BY_SERIAL_EXECUTION = 1 milliseconds, TIME_BY_PARALLEL_EXECUTION = 7720.4 milliseconds, RATIO(SERIAL/PARALLEL) = 0.000129 
+// FOR N = 10 AND MAX_VALUE = 1000, TIME_BY_SERIAL_EXECUTION = 1 milliseconds, TIME_BY_PARALLEL_EXECUTION = 5991.4 milliseconds, RATIO(SERIAL/PARALLEL) = 0.000166 
+// FOR N = 10 AND MAX_VALUE = 10000, TIME_BY_SERIAL_EXECUTION = 1 milliseconds, TIME_BY_PARALLEL_EXECUTION = 4112 milliseconds, RATIO(SERIAL/PARALLEL) = 0.000243 
+
+// FOR N = 100 AND MAX_VALUE = 10, TIME_BY_SERIAL_EXECUTION = 6.8 milliseconds, TIME_BY_PARALLEL_EXECUTION = 5578.6 milliseconds, RATIO(SERIAL/PARALLEL) = 0.001219 
+// FOR N = 100 AND MAX_VALUE = 100, TIME_BY_SERIAL_EXECUTION = 7.8 milliseconds, TIME_BY_PARALLEL_EXECUTION = 1586.6 milliseconds, RATIO(SERIAL/PARALLEL) = 0.004916 
+// FOR N = 100 AND MAX_VALUE = 1000, TIME_BY_SERIAL_EXECUTION = 7.6 milliseconds, TIME_BY_PARALLEL_EXECUTION = 2695.8 milliseconds, RATIO(SERIAL/PARALLEL) = 0.002819 
+// FOR N = 100 AND MAX_VALUE = 10000, TIME_BY_SERIAL_EXECUTION = 7.2 milliseconds, TIME_BY_PARALLEL_EXECUTION = 3356 milliseconds, RATIO(SERIAL/PARALLEL) = 0.002145
+
+// FOR N = 1000 AND MAX_VALUE = 10, TIME_BY_SERIAL_EXECUTION = 79.4 milliseconds, TIME_BY_PARALLEL_EXECUTION = 24656.4 milliseconds, RATIO(SERIAL/PARALLEL) = 0.00322 
+// FOR N = 1000 AND MAX_VALUE = 100, TIME_BY_SERIAL_EXECUTION = 110.4 milliseconds, TIME_BY_PARALLEL_EXECUTION = 6311.4 milliseconds, RATIO(SERIAL/PARALLEL) = 0.017492 
+// FOR N = 1000 AND MAX_VALUE = 1000, TIME_BY_SERIAL_EXECUTION = 114.4 milliseconds, TIME_BY_PARALLEL_EXECUTION = 1792.8 milliseconds, RATIO(SERIAL/PARALLEL) = 0.063810 
+// FOR N = 1000 AND MAX_VALUE = 10000, TIME_BY_SERIAL_EXECUTION = 100 milliseconds, TIME_BY_PARALLEL_EXECUTION = 740.2 milliseconds, RATIO(SERIAL/PARALLEL) = 0.135098
+
+// FOR N = 10000 AND MAX_VALUE = 10, TIME_BY_SERIAL_EXECUTION = 826.8 milliseconds, TIME_BY_PARALLEL_EXECUTION = 3274.4 milliseconds, RATIO(SERIAL/PARALLEL) = 0.252504 
+// FOR N = 10000 AND MAX_VALUE = 100, TIME_BY_SERIAL_EXECUTION = 1201.8 milliseconds, TIME_BY_PARALLEL_EXECUTION = 1006.4 milliseconds, RATIO(SERIAL/PARALLEL) = 1.194157
+// FOR N = 10000 AND MAX_VALUE = 1000, TIME_BY_SERIAL_EXECUTION = 1363.4 milliseconds, TIME_BY_PARALLEL_EXECUTION = 887.8 milliseconds, RATIO(SERIAL/PARALLEL) = 1.535706
+// FOR N = 10000 AND MAX_VALUE = 10000, TIME_BY_SERIAL_EXECUTION = 3095.2 milliseconds, TIME_BY_PARALLEL_EXECUTION =  1192.2 milliseconds, RATIO(SERIAL/PARALLEL) = 2.596208
+
+// FOR N = 100000 AND MAX_VALUE = 10, TIME_BY_SERIAL_EXECUTION = 10486 milliseconds, TIME_BY_PARALLEL_EXECUTION = 3253.2 milliseconds, RATIO(SERIAL/PARALLEL) = 3.223287 
+// FOR N = 100000 AND MAX_VALUE = 100, TIME_BY_SERIAL_EXECUTION = 12767 milliseconds, TIME_BY_PARALLEL_EXECUTION = 4849.8 milliseconds, RATIO(SERIAL/PARALLEL) = 2.632479
+// FOR N = 100000 AND MAX_VALUE = 1000, TIME_BY_SERIAL_EXECUTION = 17144 milliseconds, TIME_BY_PARALLEL_EXECUTION = 6081.4 milliseconds, RATIO(SERIAL/PARALLEL) = 2.819087
+// FOR N = 100000 AND MAX_VALUE = 10000, TIME_BY_SERIAL_EXECUTION = 18899.6 milliseconds, TIME_BY_PARALLEL_EXECUTION =  6023.6 milliseconds, RATIO(SERIAL/PARALLEL) = 3.137592  
+
+
+
+
+
+
+
+
+
+
