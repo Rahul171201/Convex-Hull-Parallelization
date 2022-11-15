@@ -83,23 +83,17 @@ vector<pair<int, int>> jarvisMarch(vector<pair<int, int>> points, int n)
     return hull;
 }
 
-int get_random_int(int l, int r)
-{
-    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-    return uniform_int_distribution<int>(l, r)(rng);
-}
-
 // Main function
 int main()
 {
-    // // srand(time(0));
-    // std::random_device rd;
+    // srand(time(0));
+    std::random_device rd;
 
-    // /* Random number generator */
-    // std::default_random_engine generator(rd());
+    /* Random number generator */
+    std::default_random_engine generator(rd());
 
-    // /* Distribution on which to apply the generator */
-    // std::uniform_int_distribution<long long unsigned> distribution(0, 0xFFFFFFFFFFFFFFFF);
+    /* Distribution on which to apply the generator */
+    std::uniform_int_distribution<long long unsigned> distribution(0, 0xFFFFFFFFFFFFFFFF);
 
     Plane P; // plane
     P.n = N;
@@ -109,10 +103,9 @@ int main()
     {
         // int val_x = (rand() % (MAX_VAL - 1 + 1)) + 1;
         // int val_y = (rand() % (MAX_VAL - 1 + 1)) + 1;
-        // int val_x = (distribution(generator) % (MAX_VAL - 1 + 1)) + 1;
-        // int val_y = (distribution(generator) % (MAX_VAL - 1 + 1)) + 1;
-        int val_x = get_random_int(1, MAX_VAL);
-        int val_y = get_random_int(1, MAX_VAL);
+        int val_x = (distribution(generator) % (MAX_VAL - 1 + 1)) + 1;
+        int val_y = (distribution(generator) % (MAX_VAL - 1 + 1)) + 1;
+        
         cout << val_x << " " << val_y << "\n";
         P.x[i] = val_x;
         P.y[i] = val_y;
