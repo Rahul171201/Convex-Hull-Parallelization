@@ -7,8 +7,8 @@
 using namespace std;
 using namespace std::chrono;
 
-#define N 1024      // number of points in the plane
-#define MAX_VAL 10000 // maximum value of any point in the plane
+#define N 16384   // number of points in the plane
+#define MAX_VAL 10000  // maximum value of any point in the plane
 
 int bottom_most_point_x = 0;
 int bottom_most_point_y = 0;
@@ -48,33 +48,6 @@ int getStartingPoint(int* x, int* y, int n)
         }
     }
     return index;
-}
-
-// Kernel function to find the minimum counter clockwise angle
-__global__ void min_angle(int* x, int* y, int p, int n, int* temp_point)
-{
-    int i = threadIdx.x; // get thread id
-    int stride = 1; // stride
-    int temp_rem = 2;
-
-    if (i >= n)
-        return;
-
-    temp_point[i] = i;
-    __syncthreads();
-
-    while (stride < n) {
-        if (i % temp_rem == 0) {
-            if (orientation(x[p], y[p], x[temp_point[i + stride]], y[temp_point[i + stride]], x[temp_point[i]], y[temp_point[i]]) == 2) {
-                temp_point[i] = temp_point[i + stride];
-            }
-        }
-
-        temp_rem = temp_rem * 2;
-        stride = stride * 2;
-
-        __syncthreads(); // synchronization barrier
-    }
 }
 
 int sequential_orientation(int p_x, int p_y, int q_x, int q_y, int r_x, int r_y)
@@ -128,6 +101,44 @@ void sequentialJarvisMarch(int* x, int* y, int n)
     // }
 }
 
+__global__ void kernelStride(int* x, int* y, int p, int n, int* res, int stride, int n_blocks) {
+    //printf("stride number = %d\n", stride);
+    int threadId = blockIdx.x * (blockDim.x) + threadIdx.x;
+    int index = threadId * 2 * stride;
+    
+    if (index + stride < n) {
+        //printf("for stride = %d index = %d has res value = %d\n",stride, index, res[index]);
+        if(orientation(x[p], y[p], x[res[index+stride]], y[res[index+stride]], x[res[index]], y[res[index]]) == 2) {
+            res[index] = res[index + stride];
+        }
+    }
+}
+
+__global__ void kernelInit(int * res, int n, int n_blocks) {
+    
+    int threadId = blockIdx.x * (blockDim.x) + threadIdx.x;
+    if(threadId < n)
+        res[threadId] = threadId;
+    //printf("thread id = %d", threadId);
+}
+
+int getMinimumAnglePoint(int * x, int* y, int p, int n, int num_blocks, int *res) {
+    int threads_per_block = n / num_blocks;
+    kernelInit << < num_blocks, threads_per_block>> > (res, n, num_blocks);
+    cudaDeviceSynchronize();
+    
+    res[p] = (res[p] + 1) % n;
+
+    for (int stride = 1; stride < n; stride = stride * 2) {
+        int num_threads = n / (stride * 2);
+        //cout << "Now calling for stride = " << stride << "\n";
+        kernelStride << <num_blocks, threads_per_block >> > (x, y, p, n, res, stride, num_blocks);
+        cudaDeviceSynchronize();
+    }
+    //cout << res[0] << "is op\n";
+    return res[0];
+}
+
 // Main function
 int main()
 {
@@ -135,10 +146,12 @@ int main()
 
     int* x;
     int* y;
-
+    int* res;
+   
     // unified shared memory
     cudaMallocManaged(&x, N * sizeof(int));
     cudaMallocManaged(&y, N * sizeof(int));
+    cudaMallocManaged(&res, N * sizeof(int));
 
     for (int i = 0; i < N; i++)
     {
@@ -177,7 +190,7 @@ int main()
     int starting_point = getStartingPoint(x, y, N);
 
     start = high_resolution_clock::now();
-    int p = starting_point;
+    int p = starting_point, min_angle_point;
     int count = 0;
     do
     {
@@ -186,14 +199,13 @@ int main()
         hull_y[count] = y[p];
         count++;
 
-        //int no_of_blocks = (N / 1000);
+        int no_of_blocks = 16;
         //if (N % 1000 != 0)
         //    no_of_blocks++;
-        
-        min_angle << <1, N >> > (x, y, p, N, temp_point);
-        cudaDeviceSynchronize();
 
-        p = temp_point[0];
+        min_angle_point = getMinimumAnglePoint(x, y, p, N, no_of_blocks, res);
+        //cout << "After kernel iteration , p = " << min_angle_point << "\n";
+        p = min_angle_point;
 
     } while (p != starting_point); // Repeat the process until and unless we reach ths starting point
     stop = high_resolution_clock::now();
