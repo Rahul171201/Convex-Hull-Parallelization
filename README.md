@@ -71,7 +71,7 @@ So overall complexity = log(n) + h[ log(n) ]
 Hence final complexity ~ hlog(n)
 ```
 
-#Conclusion
+# Conclusion
 In our report, we use the metric of speedup to benchmark and compare the parallel implementations of algorithms. We plot the graph of speedup against the size of the input (i.e. number of given points). As observed, for small inputs, up until (N < 105), the serial versions perform better than their parallelized counterparts (because speedup < 1). As the input size gets larger, the speedup drastically increases. For large values of N (in the order of 107), all the parallelized algorithms are almost 2-3 times faster their serial counterparts, if not more (because speedup > 2).
 
 # References
