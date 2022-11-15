@@ -8,7 +8,7 @@ using namespace std;
 using namespace std::chrono;
 
 #define N 1024      // number of points in the plane
-#define MAX_VAL 1000 // maximum value of any point in the plane
+#define MAX_VAL 10000 // maximum value of any point in the plane
 
 int bottom_most_point_x = 0;
 int bottom_most_point_y = 0;
@@ -60,6 +60,7 @@ __global__ void min_angle(int* x, int* y, int p, int n, int* temp_point)
     if (i >= n)
         return;
 
+    temp_point[i] = i;
     __syncthreads();
 
     while (stride < n) {
@@ -185,10 +186,10 @@ int main()
         hull_y[count] = y[p];
         count++;
 
-        for (int i = 0; i < N; i++) {
-            temp_point[i] = i;
-        }
-
+        //int no_of_blocks = (N / 1000);
+        //if (N % 1000 != 0)
+        //    no_of_blocks++;
+        
         min_angle << <1, N >> > (x, y, p, N, temp_point);
         cudaDeviceSynchronize();
 
