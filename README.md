@@ -1,7 +1,30 @@
 # Introduction
-A project aimed at parallelizing the convex hull algorithms using different tools.
+Convex hull problem corresponds to the task of finding out the smallest convex set that encloses a given set of points. The points can be located in 2D, 3D or even higher dimensions. For the sake of simplicity, we’ll limit our scope of project to points given in a 2D space.
 
-# Algorithm 1 (Jarvis March)
+Convex hull problem has a wide variety of applications ranging from linear algebra to graphical computing. Convex hull is widely used in robot motion planning to find out the optimal path of a robot avoiding obstacles. Similar to robot path planning, It is also used in path planning of autonomous vehicles. 
+
+The real-time computations involving the use of convex hulls in various fields like computer graphics and image processing get very challenging once the number of points cross 106. In our project, we will discover and analyze various algorithms that can be used to help us parallelize the process of finding out the convex hull of a given set of points.
+
+# Sequential Jarvis March Algorithm
+* After distribution of points in the plane, insert all the points in an array.
+* Find the bottom-most point in the plane by iterating over all the points sequentially one by one and checking if it has a smaller y coordinate than the current bottommost point.
+* The bottommost point will be our current starting point.
+* Iterate over all the points sequentially and find out the least counter clockwise point with respect to the current point. The least counter clockwise point will become the starting point for the next iteration and is pushed to the convex hull.
+*  The process is repeated until we reach the bottommost point again and the convex hull is hence calculated.
+
+
+## Overall Complexity:
+```
+The bottommost point is calculated in ‘n’ steps using sequential search.
+Then the calculation of minimum counter clockwise point is done ‘h’ times, where h is the number of points in the convex hull.
+Computation of minimum counter clockwise points is done in n steps again using parallel reduction technique.
+So overall complexity = n + h * n
+Hence final complexity ~ nh
+
+```
+
+
+# Parallel Algorithm 1 (Jarvis March)
 * After distribution of points in the plane, insert all the points in an array.
 * Divide the array into k partitions, where k is the number of threads.
 * Find the bottom-most point in the plane. It will be our starting point in the algorithm.
@@ -18,14 +41,17 @@ Finally combining the results from all the threads takes p steps. So overall com
 Considering n>>p, we can say that the overall complexity ~ O(nh/p).
 ```
 
-## Algorithm 1 (Jarvis March) Using Open MPI
+## Results of Parallel Algorithm 1 (Jarvis March) Using Open MPI
 <img src="https://user-images.githubusercontent.com/70642284/201856798-294e2084-85f8-4b7c-95ab-961c579f2080.jpg" alt="result_open_mpi" width = "500" height = "540"> <img src="https://user-images.githubusercontent.com/70642284/201845608-65b9a431-a3df-44e2-acc7-d7f804dc756f.jpg" alt="result_open_mpi" width = "480" height = "400">
 
-## Algorithm 1 (Jarvis March) Using Open MP
+## Results of Parallel Algorithm 1 (Jarvis March) Using Open MP
 <img src="https://user-images.githubusercontent.com/70642284/201857356-8a7b0c4c-faca-48ce-a146-17b0c0294230.jpg" alt="result_open_mpi" width = "500" height = "540">
 
+## Results of Parallel Algorithm 1 (Jarvis March) Using pthread
+<img src="https://user-images.githubusercontent.com/70642284/201902370-d55d0041-37fa-4ad1-83de-1554e522e558.png" alt="result_open_mpi" width = "500" height = "540">
 
-# Algorithm 2 (Jarvis March)
+
+# Parallel Algorithm 2 (Jarvis March)
 * After distribution of points in the plane, insert all the points in an array.
 * Calculate the bottommost starting point using parallel reduction technique. This will be in O(log(n)).
 * Now we assign each element of the array to a thread. Each thread stores the least counter clockwise point (initially itself) in a res array.
