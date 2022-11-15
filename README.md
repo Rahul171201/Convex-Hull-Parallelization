@@ -5,6 +5,9 @@ Convex hull problem has a wide variety of applications ranging from linear algeb
 
 The real-time computations involving the use of convex hulls in various fields like computer graphics and image processing get very challenging once the number of points cross 106. In our project, we will discover and analyze various algorithms that can be used to help us parallelize the process of finding out the convex hull of a given set of points.
 
+<img src="https://user-images.githubusercontent.com/70642284/201902932-3e1a808c-3b69-4138-a3e7-b079740b4394.png" alt="result_open_mpi" width = "400" height = "340">
+
+
 # Sequential Jarvis March Algorithm
 * After distribution of points in the plane, insert all the points in an array.
 * Find the bottom-most point in the plane by iterating over all the points sequentially one by one and checking if it has a smaller y coordinate than the current bottommost point.
@@ -67,3 +70,10 @@ Computation of minimum counter clockwise point is done in log(n) steps again usi
 So overall complexity = log(n) + h[ log(n) ]
 Hence final complexity ~ hlog(n)
 ```
+
+# References
+* Convex Hull | Set 1 (Jarvis’s Algorithm or Wrapping) : https://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
+
+* A BSP realization of Jarvis's algorithm : https://ieeexplore.ieee.org/document/797603
+
+* Convex Hull | Set 2 (Graham Scan) : https://www.geeksforgeeks.org/convex-hull-set-2-graham-scan/
